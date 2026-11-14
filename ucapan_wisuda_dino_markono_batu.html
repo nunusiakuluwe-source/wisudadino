@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BATU Receipt — Wisuda Dino Markono 2022</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --paper: #FAF6EE;
+      --paper-dark: #EFE8D8;
+      --ink: #1C1917;
+      --ink-muted: #57534E;
+      --stamp-red: #C8322B;
+      --stamp-green: #1E6B47;
+      --accent-amber: #B45309;
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #161514;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(217, 119, 6, 0.12) 0%, transparent 60%),
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
+      background-size: 100% 100%, 24px 24px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-mono-receipt {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .font-serif-warm {
+      font-family: 'Fraunces', serif;
+    }
+
+    /* Thermal Paper Container */
+    .receipt-paper {
+      background-color: var(--paper);
+      background-image: 
+        repeating-linear-gradient(
+          0deg,
+          rgba(0,0,0,0.012) 0px,
+          rgba(0,0,0,0.012) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+      box-shadow: 
+        0 25px 60px -15px rgba(0, 0, 0, 0.7),
+        0 0 1px 1px rgba(0, 0, 0, 0.08);
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Jagged Sawtooth Paper Edges */
+    .receipt-edge-top {
+      height: 14px;
+      width: 100%;
+      background: linear-gradient(135deg, transparent 33.33%, var(--paper) 33.33%, var(--paper) 66.67%, transparent 66.67%),
+                  linear-gradient(45deg, transparent 33.33%, var(--paper) 33.33%, var(--paper) 66.67%, transparent 66.67%);
+      background-size: 16px 28px;
+      background-position: 0 -14px;
+    }
+
+    .receipt-edge-bottom {
+      height: 14px;
+      width: 100%;
+      background: linear-gradient(135deg, var(--paper) 33.33%, transparent 33.33%, transparent 66.67%, var(--paper) 66.67%),
+                  linear-gradient(45deg, var(--paper) 33.33%, transparent 33.33%, transparent 66.67%, var(--paper) 66.67%);
+      background-size: 16px 28px;
+    }
+
+    /* Dashed Receipt Dividers */
+    .receipt-divider {
+      border-top: 1.5px dashed #C7BFA8;
+      margin: 1.15rem 0;
+    }
+
+    .receipt-divider-double {
+      border-top: 3px double #ABA28C;
+      margin: 1.15rem 0;
+    }
+
+    /* Printing Entry Animation */
+    @keyframes printDown {
+      0% {
+        opacity: 0;
+        transform: translateY(-28px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-print {
+      animation: printDown 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Rubber Stamp Slam Animation */
+    @keyframes stampSlam {
+      0% {
+        opacity: 0;
+        transform: scale(2.8) rotate(-14deg);
+      }
+      60% {
+        opacity: 1;
+        transform: scale(0.92) rotate(-6deg);
+      }
+      80% {
+        transform: scale(1.04) rotate(-8deg);
+      }
+      100% {
+        opacity: 0.92;
+        transform: scale(1) rotate(-7deg);
+      }
+    }
+
+    .rubber-stamp {
+      border: 3px solid var(--stamp-red);
+      color: var(--stamp-red);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      padding: 0.45rem 1rem;
+      display: inline-block;
+      border-radius: 4px;
+      box-shadow: inset 0 0 0 1.5px var(--stamp-red);
+      mask-image: radial-gradient(rgba(0,0,0,0.92) 60%, rgba(0,0,0,0.75) 100%);
+      animation: stampSlam 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .rubber-stamp-green {
+      border-color: var(--stamp-green);
+      color: var(--stamp-green);
+      box-shadow: inset 0 0 0 1.5px var(--stamp-green);
+    }
+
+    /* Screen Shake Effect */
+    @keyframes microShake {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-4px, 3px); }
+      40% { transform: translate(4px, -3px); }
+      60% { transform: translate(-3px, -2px); }
+      80% { transform: translate(3px, 2px); }
+    }
+
+    .shake-screen {
+      animation: microShake 0.35s ease-in-out;
+    }
+
+    /* Strikethrough Animated Line */
+    .strike-item {
+      position: relative;
+      transition: color 0.25s ease;
+    }
+
+    .strike-item.checked {
+      color: #8C857B;
+      text-decoration: line-through;
+      text-decoration-color: var(--stamp-red);
+      text-decoration-thickness: 2px;
+    }
+
+    /* Barcode Bars */
+    .barcode-pattern {
+      height: 44px;
+      width: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        #1C1917 0px,
+        #1C1917 2px,
+        transparent 2px,
+        transparent 5px,
+        #1C1917 5px,
+        #1C1917 6px,
+        transparent 6px,
+        transparent 9px,
+        #1C1917 9px,
+        #1C1917 13px,
+        transparent 13px,
+        transparent 15px,
+        #1C1917 15px,
+        #1C1917 16px,
+        transparent 16px,
+        transparent 20px
+      );
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #161514;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #44403C;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="py-6 px-3 sm:px-6 flex flex-col items-center justify-start min-h-screen select-none">
+
+  <!-- Top Ambient Controls -->
+  <div class="w-full max-w-md flex items-center justify-between mb-3 px-1 text-stone-300 text-xs font-mono-receipt">
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>BATU POS TERMINAL v2.2</span>
+    </div>
+    <button id="soundToggleBtn" onclick="toggleSound()" class="flex items-center gap-1.5 bg-stone-800/90 hover:bg-stone-700 text-stone-200 px-2.5 py-1 rounded-full border border-stone-700 transition">
+      <span id="soundIcon">🔊</span>
+      <span id="soundLabel">Suara: ON</span>
+    </button>
+  </div>
+
+  <!-- Printer Slot Visual -->
+  <div class="w-full max-w-md h-3.5 bg-stone-950 rounded-full border border-stone-800 shadow-inner mb-[-6px] z-10"></div>
+
+  <!-- Main Receipt Wrapper -->
+  <main id="receiptWrapper" class="w-full max-w-md z-20 animate-print">
+    <!-- Top Sawtooth Edge -->
+    <div class="receipt-edge-top"></div>
+
+    <!-- Receipt Paper Body -->
+    <div class="receipt-paper px-5 py-6 sm:px-7 sm:py-8">
+
+      <!-- ================= RECEIPT HEADER (ALWAYS VISIBLE) ================= -->
+      <header class="text-center">
+        <div class="inline-block border border-stone-800 px-2.5 py-0.5 text-[10px] font-mono-receipt tracking-widest uppercase mb-2 bg-stone-900 text-amber-50">
+          OFFICIAL GRADUATION RECEIPT
+        </div>
+        <h1 class="font-mono-receipt text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
+          B A T U
+        </h1>
+        <p class="font-mono-receipt text-xs font-bold text-stone-600 tracking-widest uppercase mt-0.5">
+          (Banyu &amp; Tiur)
+        </p>
+        <p class="font-mono-receipt text-[11px] text-stone-500 mt-0.5">
+          Distributor Doa, Kado &amp; Support System
+        </p>
+
+        <div class="receipt-divider"></div>
+
+        <!-- Metadata Table -->
+        <div class="font-mono-receipt text-xs text-left space-y-1 text-stone-700">
+          <div class="flex justify-between">
+            <span>PELANGGAN :</span>
+            <span class="font-bold text-stone-900">PASUKAN DINO MARKONO</span>
+          </div>
+          <div class="flex justify-between">
+            <span>ANGKATAN  :</span>
+            <span class="font-bold text-stone-900">2022 (FPIK)</span>
+          </div>
+          <div class="flex justify-between">
+            <span>KASIR     :</span>
+            <span>BANYU &amp; TIUR</span>
+          </div>
+          <div class="flex justify-between">
+            <span>STATUS    :</span>
+            <span class="bg-emerald-800 text-amber-50 px-1.5 py-0.2 font-bold">RESMI SARJANA (S.Pi.)</span>
+          </div>
+        </div>
+
+        <div class="receipt-divider-double"></div>
+      </header>
+
+      <!-- ================= STEP NAVIGATION INDICATOR ================= -->
+      <div class="flex items-center justify-between bg-stone-200/70 rounded-lg p-1.5 mb-5 font-mono-receipt text-[11px]">
+        <button onclick="switchSlide(1)" id="navStep1" class="flex-1 py-1.5 px-2 rounded-md font-bold transition text-center bg-stone-900 text-amber-50 shadow-sm">
+          1. Hapus Beban
+        </button>
+        <button onclick="trySwitchSlide(2)" id="navStep2" class="flex-1 py-1.5 px-2 rounded-md font-medium transition text-center text-stone-500">
+          2. Voting
+        </button>
+        <button onclick="trySwitchSlide(3)" id="navStep3" class="flex-1 py-1.5 px-2 rounded-md font-medium transition text-center text-stone-500">
+          3. Hasil
+        </button>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- SLIDE 1: SAMBUTAN WISUDA & RITUAL HAPUS BEBAN                       -->
+      <!-- =================================================================== -->
+      <section id="slide1" class="space-y-5">
+        <!-- Warm Opening Card from BATU -->
+        <div class="bg-[#F3ECE0] border-2 border-stone-800 rounded-xl p-4 sm:p-5 relative shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-mono-receipt text-[10px] uppercase tracking-wider px-2 py-0.5 bg-amber-700 text-amber-50 rounded font-bold">
+              Pesan Pembuka dari BATU
+            </span>
+            <span class="text-lg">🎓</span>
+          </div>
+
+          <blockquote class="font-serif-warm text-lg sm:text-xl font-semibold text-stone-900 leading-snug">
+            “Selamat wisuda temen-temen, selamat menikmati kehidupan yang sesungguhnya.”
+          </blockquote>
+
+          <p class="text-xs text-stone-600 mt-2.5 leading-relaxed">
+            Spesial buat pasukan <strong>Dino Markono Angkatan 2022</strong> yang akhirnya sah menyandang gelar <strong>S.Pi.</strong> di belakang nama:
+          </p>
+
+          <!-- Alphabetical & Clean Graduate List -->
+          <div class="mt-3 pt-2.5 border-t border-dashed border-stone-400/80 grid grid-cols-1 gap-1 font-mono-receipt text-[11.5px] text-stone-800">
+            <div class="flex items-center gap-2"><span class="text-amber-700 font-bold">01.</span> <span class="font-semibold">Izza Maslakhatin, S.Pi.</span></div>
+            <div class="flex items-center gap-2"><span class="text-amber-700 font-bold">02.</span> <span class="font-semibold">Salsabila Anggraeni Yohana, S.Pi.</span></div>
+            <div class="flex items-center gap-2"><span class="text-amber-700 font-bold">03.</span> <span class="font-semibold">Stephani Pricillia T, S.Pi.</span></div>
+            <div class="flex items-center gap-2"><span class="text-amber-700 font-bold">04.</span> <span class="font-semibold">Susita Lusiyana, S.Pi.</span></div>
+            <div class="flex items-center gap-2"><span class="text-amber-700 font-bold">05.</span> <span class="font-semibold">Taufiqur Rahman Hidayat, S.Pi.</span></div>
+            <div class="flex items-center gap-2"><span class="text-amber-700 font-bold">06.</span> <span class="font-semibold">Yusril Fikrillah, S.Pi.</span></div>
+          </div>
+        </div>
+
+        <div class="receipt-divider"></div>
+
+        <!-- Game 1 Instructions -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="font-mono-receipt text-sm font-extrabold uppercase tracking-wide text-stone-900">
+              MISI 1: RITUAL HAPUS BEBAN KULIAH
+            </h2>
+            <span id="burdenCounterBadge" class="font-mono-receipt text-xs font-bold px-2 py-0.5 rounded bg-stone-200 text-stone-800">
+              0 / 6 LUNAS
+            </span>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed mb-3">
+            Sebelum lanjut ke sesi kejujuran grup, <strong>tap satu per satu</strong> semua penderitaan masa kuliah di bawah ini untuk mencoretnya dari hidup kalian!
+          </p>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-2 bg-stone-200 rounded-full overflow-hidden mb-4 border border-stone-300">
+            <div id="burdenProgressBar" class="h-full bg-emerald-700 transition-all duration-300 w-0"></div>
+          </div>
+
+          <!-- Checklist Container -->
+          <div id="burdenListContainer" class="space-y-2.5 font-mono-receipt text-xs">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Stamp Reveal Area (Hidden until all 6 checked) -->
+        <div id="allClearedStampBox" class="hidden text-center py-3">
+          <div class="rubber-stamp text-sm sm:text-base">
+            ✓ TOTAL BEBAN KULIAH: LUNAS TUNTAS
+          </div>
+          <p class="font-mono-receipt text-[11px] text-emerald-800 font-bold mt-2">
+            Metode Pembayaran: Lunas dibayar pakai begadang, keringat &amp; air mata.
+          </p>
+        </div>
+
+        <!-- Action Button to Slide 2 -->
+        <div class="pt-2">
+          <button
+            id="toSlide2Btn"
+            onclick="goToQuiz()"
+            disabled
+            class="w-full py-3.5 px-4 rounded-xl font-mono-receipt text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 bg-stone-300 text-stone-500 cursor-not-allowed border-2 border-stone-300"
+          >
+            🔒 Centang Semua 6 Beban Dulu
+          </button>
+
+          <button
+            onclick="openResultsDirectly()"
+            class="w-full mt-2.5 py-2 text-center font-mono-receipt text-[11px] text-stone-500 hover:text-stone-800 underline transition"
+          >
+            Sudah pernah isi vote? Lihat Live Hasil Polling &rarr;
+          </button>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- SLIDE 2: DINO MARKONO AWARDS (POLLING 6 PERTANYAAN)                 -->
+      <!-- =================================================================== -->
+      <section id="slide2" class="hidden space-y-4">
+        <div class="bg-stone-900 text-amber-50 rounded-xl p-3.5 font-mono-receipt">
+          <div class="flex items-center justify-between text-[11px] text-amber-300 mb-1">
+            <span>DINO MARKONO AWARDS 2022</span>
+            <span id="quizStepIndicator">SOAL 1 / 6</span>
+          </div>
+          <p class="text-xs text-stone-300 leading-relaxed">
+            Jawab sejujur-jujurnya berdasarkan pengamatan selama kuliah. Suara kalian langsung masuk ke perhitungan <strong>Real-Time Polling</strong>!
+          </p>
+          <!-- Quiz Progress Bar -->
+          <div class="w-full h-1.5 bg-stone-700 rounded-full overflow-hidden mt-2.5">
+            <div id="quizProgressBar" class="h-full bg-amber-400 transition-all duration-300" style="width: 16.66%"></div>
+          </div>
+        </div>
+
+        <!-- Active Question Card -->
+        <div id="questionCard" class="bg-[#F3ECE0] border-2 border-stone-800 rounded-xl p-4 sm:p-5 transition-all">
+          <div class="font-mono-receipt text-[11px] font-bold text-amber-800 uppercase tracking-wider mb-1" id="questionCategoryLabel">
+            NOMINASI #1
+          </div>
+          <h3 id="questionTitle" class="font-serif-warm text-xl sm:text-2xl font-bold text-stone-900 mb-4 leading-snug">
+            Siapa yang paling julid?
+          </h3>
+
+          <!-- Options List -->
+          <div id="optionsContainer" class="space-y-2">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Funny Joke Message for Question 5 -->
+          <div id="q5JokeToast" class="hidden mt-3 p-2.5 rounded-lg bg-red-100 border border-red-400 text-red-900 font-mono-receipt text-[11px] leading-relaxed">
+            ⚠️ <strong>SISTEM MENOLAK:</strong> Berdasarkan fakta ilmiah FPIK 2022, kandidat lain tidak memenuhi kualifikasi kesabaran &amp; kharisma. Wajib pilih <strong>Banyu Linuwih</strong>! 😂
+          </div>
+        </div>
+
+        <!-- Quiz Navigation Buttons -->
+        <div class="flex items-center gap-2.5 pt-1 font-mono-receipt text-xs">
+          <button
+            id="prevQuestionBtn"
+            onclick="prevQuestion()"
+            class="py-3 px-4 rounded-xl border-2 border-stone-400 text-stone-700 font-bold hover:bg-stone-200 transition disabled:opacity-40"
+          >
+            &larr; Balik
+          </button>
+
+          <button
+            id="nextQuestionBtn"
+            onclick="nextQuestion()"
+            disabled
+            class="flex-1 py-3 px-4 rounded-xl font-bold uppercase tracking-wider transition bg-stone-300 text-stone-500 border-2 border-stone-300 cursor-not-allowed"
+          >
+            Pilih Jawaban Dulu
+          </button>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- SLIDE 3: HASIL LIVE POLLING & STRUK AKHIR WISUDA                    -->
+      <!-- =================================================================== -->
+      <section id="slide3" class="hidden space-y-5">
+        <!-- Header Banner -->
+        <div class="text-center bg-stone-900 text-amber-50 rounded-xl p-4 border-2 border-stone-900 shadow-sm">
+          <div class="text-2xl mb-1">🏆</div>
+          <h2 class="font-mono-receipt text-base sm:text-lg font-extrabold tracking-wide uppercase text-amber-300">
+            HASIL DINO MARKONO AWARDS
+          </h2>
+          <p class="font-mono-receipt text-[11px] text-stone-300 mt-0.5">
+            ANGKATAN 2022 • REKAP SUARA REAL-TIME
+          </p>
+          <div class="mt-3 flex items-center justify-center gap-2 flex-wrap">
+            <span id="totalVotersBadge" class="inline-flex items-center gap-1.5 text-[11px] font-mono-receipt bg-stone-800 text-emerald-300 px-3 py-1 rounded-full border border-stone-700">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              Menghitung suara masuk...
+            </span>
+            <button
+              onclick="refreshLiveResults()"
+              id="refreshResultsBtn"
+              class="inline-flex items-center gap-1 text-[11px] font-mono-receipt bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold px-3 py-1 rounded-full transition active:scale-95"
+            >
+              🔄 Refresh Suara
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="resultsLoadingBox" class="hidden py-8 text-center font-mono-receipt text-xs text-stone-600 space-y-2">
+          <div class="inline-block w-6 h-6 border-2 border-stone-800 border-t-transparent rounded-full animate-spin"></div>
+          <p>Mencetak struk rekapitulasi suara Dino Markono...</p>
+        </div>
+
+        <!-- Results Breakdown Container -->
+        <div id="resultsListContainer" class="space-y-4">
+          <!-- Populated dynamically with Winner + % & Vote Breakdown -->
+        </div>
+
+        <div class="receipt-divider-double"></div>
+
+        <!-- Final Warm Graduation Note & Interactive Official Stamp -->
+        <div class="bg-[#F3ECE0] border-2 border-stone-800 rounded-xl p-4 sm:p-5 space-y-3 relative overflow-hidden">
+          <div class="font-mono-receipt text-[11px] font-bold uppercase tracking-widest text-stone-500">
+            CATATAN AKHIR KASIR (BATU):
+          </div>
+
+          <p class="text-xs sm:text-sm text-stone-800 leading-relaxed">
+            Selamat wisuda temen-temen <strong>Dino Markono Angkatan 2022</strong>, selamat menikmati kehidupan yang sesungguhnya!
+          </p>
+          <p class="text-xs sm:text-sm text-stone-800 leading-relaxed">
+            Terima kasih sudah jadi teman seperjuangan dari zaman laprak, nunggu dosen di depan ruangan, sampai drama menghuni gazebo FPIK. Kadonya silakan dinikmati, beban kuliahnya resmi ditinggal di belakang. Semoga langkah kalian ke depan selalu dimudahkan dan jangan sampai <em>lost contact</em>!
+          </p>
+
+          <div class="pt-2 flex items-center justify-between border-t border-dashed border-stone-400 font-mono-receipt text-xs">
+            <div>
+              <div class="text-[10px] text-stone-500">TERTANDA,</div>
+              <div class="font-extrabold text-stone-900">BATU (Banyu &amp; Tiur)</div>
+            </div>
+
+            <div id="finalStampContainer">
+              <button
+                onclick="triggerFinalStamp()"
+                class="bg-red-700 hover:bg-red-800 text-amber-50 font-mono-receipt text-[11px] font-bold px-3 py-2 rounded-lg shadow transition active:scale-95 animate-bounce"
+              >
+                💮 Tap Stempel Sah S.Pi.
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barcode & Receipt Footer -->
+        <div class="pt-3 text-center space-y-2">
+          <div class="barcode-pattern mx-auto max-w-[260px] opacity-90"></div>
+          <div class="font-mono-receipt text-[10px] tracking-[0.25em] text-stone-500">
+            *DINO-MARKONO-2022-SPI-BATU*
+          </div>
+          <p class="font-mono-receipt text-[11px] font-bold text-stone-700 pt-1">
+            -- SIMPAN / SCREENSHOT STRUK INI SEBAGAI BUKTI KALIAN HEBAT --
+          </p>
+
+          <div class="pt-3 flex flex-col sm:flex-row gap-2 justify-center">
+            <button
+              onclick="celebrateAgain()"
+              class="py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-50 font-mono-receipt text-xs font-bold transition"
+            >
+              🎉 Rayakan Lagi (Confetti)
+            </button>
+            <button
+              onclick="retakeVote()"
+              class="py-2.5 px-4 rounded-xl border border-stone-400 hover:bg-stone-200 text-stone-700 font-mono-receipt text-xs font-semibold transition"
+            >
+              🗳️ Tambah Vote dari HP Teman Lain
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Bottom Sawtooth Edge -->
+    <div class="receipt-edge-bottom"></div>
+  </main>
+
+  <!-- Subtle Footer -->
+  <footer class="w-full max-w-md mt-6 mb-8 text-center font-mono-receipt text-[11px] text-stone-500 space-y-2 px-2">
+    <p>Crafted with ❤️ by <strong>BATU (Banyu &amp; Tiur)</strong> for Dino Markono ’22</p>
+    <div class="flex items-center justify-center mt-2">
+      <span class="text-[10px] text-emerald-400 font-bold">● Server Live Database Aktif</span>
+    </div>
+  </footer>
+
+  <!-- =================================================================== -->
+  <!-- APPLICATION LOGIC & REAL-TIME ENGINE (FIREBASE)                     -->
+  <!-- =================================================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Daftar 6 Wisudawan Dino Markono Angkatan 2022
+    const GRADUATES = [
+      "Izza Maslakhatin, S.Pi.",
+      "Salsabila Anggraeni Yohana, S.Pi.",
+      "Stephani Pricillia T, S.Pi.",
+      "Susita Lusiyana, S.Pi.",
+      "Taufiqur Rahman Hidayat, S.Pi.",
+      "Yusril Fikrillah, S.Pi."
+    ];
+
+    // Daftar 6 Beban Kuliah untuk Dihapus di Misi 1
+    const BURDENS = [
+      { id: "b1", text: "Begadang ngerjain laprak", sub: "Jam 3 pagi masih revisi pembahasan & daftar pustaka" },
+      { id: "b2", text: "Penghuni gazebo FPIK", sub: "Markas besar rebahan, ghibah, dan nunggu kelas" },
+      { id: "b3", text: "Asam lambung lupa makan/kurang tidur", sub: "Kombinasi maut kopi kenangan + dikejar deadline" },
+      { id: "b4", text: "Tugas praktikum bikin video", sub: "Take berkali-kali, ngedit mepet jam pengumpulan" },
+      { id: "b5", text: "Laptop eror pas penting-pentingnya", sub: "Not responding tepat saat mau nge-save file akhir" },
+      { id: "b6", text: "Nunggu dosen depan ruangan", sub: "Sudah datang pagi-pagi, beliau baru lewat sore hari" }
+    ];
+
+    // Daftar 6 Pertanyaan Dino Markono Awards
+    const QUESTIONS = [
+      { id: "q1", badge: "NOMINASI #1 • KOMENTATOR TERPEDAS", question: "Siapa yang paling julid?", options: GRADUATES, isBanyuSpecial: false },
+      { id: "q2", badge: "NOMINASI #2 • GAYA PALING GEMulai", question: "Siapa yang paling endel?", options: GRADUATES, isBanyuSpecial: false },
+      { id: "q3", badge: "NOMINASI #3 • EMOSI TINGKAT TINGGI", question: "Siapa yang suka marah?", options: GRADUATES, isBanyuSpecial: false },
+      { id: "q4", badge: "NOMINASI #4 • SPEAKER AKTIF 24 JAM", question: "Siapa yang paling nyocot?", options: GRADUATES, isBanyuSpecial: false },
+      { id: "q5", badge: "NOMINASI #5 • PENGHARGAAN TERTINGGI ALAM SEMESTA", question: "Siapa yang paling berkharisma, penyayang, dan sabar?", options: ["Banyu Linuwih"], isBanyuSpecial: true },
+      { id: "q6", badge: "NOMINASI #6 • DUTA AYO KUMPUL TAPI BATAL", question: "Siapa yang paling suka \"wacana\"?", options: GRADUATES, isBanyuSpecial: false }
+    ];
+
+    // State Aplikasi
+    let checkedBurdens = new Set();
+    let currentQuestionIndex = 0;
+    let userAnswers = {};
+    let soundEnabled = true;
+    let audioCtx = null;
+    let hasStampedFinal = false;
+
+    // Firebase Initialization
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'dino-markono-awards-2022';
+    let db = null;
+    let auth = null;
+    let user = null;
+
+    if (typeof __firebase_config !== 'undefined') {
+        const app = initializeApp(JSON.parse(__firebase_config));
+        db = getFirestore(app);
+        auth = getAuth(app);
+    }
+
+    async function initAuth() {
+        if (!auth) return;
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                user = cred.user;
+            } else {
+                const cred = await signInAnonymously(auth);
+                user = cred.user;
+            }
+        } catch (e) {
+            console.error("Auth error:", e);
+        }
+    }
+    
+    // Authenticate silently
+    initAuth();
+
+    function getEmptyTally() {
+        const tally = {};
+        QUESTIONS.forEach(q => { tally[q.id] = new Array(q.options.length).fill(0); });
+        return tally;
+    }
+
+    // Audio & Sound
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    window.playSound = function(type) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        if (type === "check") {
+          const osc = ctx.createOscillator(); const gain = ctx.createGain();
+          osc.type = "triangle"; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(880, now + 0.11);
+          gain.gain.setValueAtTime(0.16, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+          osc.connect(gain); gain.connect(ctx.destination); osc.start(now); osc.stop(now + 0.15);
+        } else if (type === "uncheck") {
+          const osc = ctx.createOscillator(); const gain = ctx.createGain();
+          osc.type = "sine"; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(260, now + 0.09);
+          gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          osc.connect(gain); gain.connect(ctx.destination); osc.start(now); osc.stop(now + 0.1);
+        } else if (type === "stamp") {
+          const osc = ctx.createOscillator(); const gain = ctx.createGain();
+          osc.type = "sawtooth"; osc.frequency.setValueAtTime(140, now); osc.frequency.exponentialRampToValueAtTime(42, now + 0.22);
+          gain.gain.setValueAtTime(0.32, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.connect(gain); gain.connect(ctx.destination); osc.start(now); osc.stop(now + 0.26);
+        } else if (type === "click") {
+          const osc = ctx.createOscillator(); const gain = ctx.createGain();
+          osc.type = "sine"; osc.frequency.setValueAtTime(660, now); gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06); osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(now); osc.stop(now + 0.06);
+        } else if (type === "error") {
+          const osc = ctx.createOscillator(); const gain = ctx.createGain();
+          osc.type = "sawtooth"; osc.frequency.setValueAtTime(190, now); osc.frequency.setValueAtTime(150, now + 0.08);
+          gain.gain.setValueAtTime(0.18, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.connect(gain); gain.connect(ctx.destination); osc.start(now); osc.stop(now + 0.23);
+        } else if (type === "fanfare") {
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.type = "triangle"; osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+            gain.gain.setValueAtTime(0.14, now + idx * 0.07); gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.55);
+            osc.connect(gain); gain.connect(ctx.destination); osc.start(now + idx * 0.07); osc.stop(now + idx * 0.07 + 0.56);
+          });
+        }
+      } catch (e) {}
+    };
+
+    window.toggleSound = function() {
+      soundEnabled = !soundEnabled;
+      document.getElementById("soundIcon").textContent = soundEnabled ? "🔊" : "🔇";
+      document.getElementById("soundLabel").textContent = soundEnabled ? "Suara: ON" : "Suara: OFF";
+      if (soundEnabled) window.playSound("click");
+    };
+
+    function triggerScreenShake() {
+      const wrapper = document.getElementById("receiptWrapper");
+      wrapper.classList.remove("shake-screen"); void wrapper.offsetWidth; wrapper.classList.add("shake-screen");
+    }
+
+    // Rendering functions
+    function renderBurdens() {
+      const container = document.getElementById("burdenListContainer");
+      container.innerHTML = "";
+
+      BURDENS.forEach((item, index) => {
+        const isChecked = checkedBurdens.has(item.id);
+        const row = document.createElement("div");
+        row.onclick = () => window.toggleBurden(item.id);
+        row.className = `cursor-pointer rounded-xl p-3 border-2 transition-all duration-200 flex items-start justify-between gap-3 ${isChecked ? "bg-stone-200/80 border-stone-400" : "bg-[#FAF6EE] border-stone-800 hover:bg-amber-50/60 shadow-sm active:scale-[0.99]"}`;
+        row.innerHTML = `
+          <div class="flex items-start gap-2.5 flex-1">
+            <div class="mt-0.5 w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${isChecked ? "bg-emerald-700 border-emerald-700 text-white" : "bg-white border-stone-800"}">${isChecked ? "✓" : ""}</div>
+            <div class="flex-1">
+              <div class="font-bold text-xs sm:text-sm strike-item ${isChecked ? "checked" : "text-stone-900"}">0${index + 1}. ${item.text}</div>
+              <div class="text-[11px] text-stone-500 mt-0.5 font-sans">${item.sub}</div>
+            </div>
+          </div>
+          <span class="text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 ${isChecked ? "bg-red-100 text-red-800 border border-red-300" : "bg-stone-200 text-stone-700"}">${isChecked ? "LUNAS" : "BEBAN"}</span>
+        `;
+        container.appendChild(row);
+      });
+
+      const count = checkedBurdens.size; const total = BURDENS.length;
+      document.getElementById("burdenCounterBadge").textContent = `${count} / ${total} LUNAS`;
+      document.getElementById("burdenProgressBar").style.width = `${Math.round((count / total) * 100)}%`;
+
+      const btn = document.getElementById("toSlide2Btn");
+      const stampBox = document.getElementById("allClearedStampBox");
+
+      if (count === total) {
+        stampBox.classList.remove("hidden"); btn.disabled = false;
+        btn.className = "w-full py-3.5 px-4 rounded-xl font-mono-receipt text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all duration-300 bg-stone-900 hover:bg-stone-800 text-amber-300 border-2 border-stone-900 shadow-lg active:scale-98 cursor-pointer";
+        btn.innerHTML = "Beban Lunas! Lanjut ke Dino Markono Awards &rarr;";
+      } else {
+        stampBox.classList.add("hidden"); btn.disabled = true;
+        btn.className = "w-full py-3.5 px-4 rounded-xl font-mono-receipt text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 bg-stone-300 text-stone-500 cursor-not-allowed border-2 border-stone-300";
+        btn.innerHTML = `🔒 Centang ${total - count} Beban Lagi Untuk Lanjut`;
+      }
+    }
+
+    window.toggleBurden = function(id) {
+      const wasAllChecked = checkedBurdens.size === BURDENS.length;
+      if (checkedBurdens.has(id)) { checkedBurdens.delete(id); window.playSound("uncheck"); } 
+      else { checkedBurdens.add(id); window.playSound("check"); }
+      renderBurdens();
+      if (!wasAllChecked && checkedBurdens.size === BURDENS.length) {
+        setTimeout(() => { window.playSound("stamp"); triggerScreenShake(); }, 120);
+      }
+    };
+
+    window.goToQuiz = function() {
+      if (checkedBurdens.size < BURDENS.length) return;
+      window.playSound("click"); window.switchSlide(2); renderCurrentQuestion();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    function renderCurrentQuestion() {
+      const q = QUESTIONS[currentQuestionIndex]; const totalQ = QUESTIONS.length;
+      document.getElementById("quizStepIndicator").textContent = `SOAL ${currentQuestionIndex + 1} / ${totalQ}`;
+      document.getElementById("quizProgressBar").style.width = `${((currentQuestionIndex + 1) / totalQ) * 100}%`;
+      document.getElementById("questionCategoryLabel").textContent = q.badge;
+      document.getElementById("questionTitle").textContent = q.question;
+      document.getElementById("q5JokeToast").classList.add("hidden");
+      
+      const optionsContainer = document.getElementById("optionsContainer");
+      optionsContainer.innerHTML = "";
+      const selectedOptIndex = userAnswers[q.id];
+
+      if (q.isBanyuSpecial) {
+        const isSelected = selectedOptIndex === 0;
+        const banyuBtn = document.createElement("button"); banyuBtn.type = "button";
+        banyuBtn.onclick = () => window.selectOption(q.id, 0);
+        banyuBtn.className = `w-full text-left p-4 rounded-xl border-2 font-mono-receipt transition-all flex items-center justify-between ${isSelected ? "bg-amber-400 border-stone-900 text-stone-950 font-extrabold shadow-md" : "bg-white hover:bg-amber-50 border-stone-800 text-stone-900 font-bold"}`;
+        banyuBtn.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-xl">👑</span>
+            <div><div class="text-sm sm:text-base">Banyu Linuwih</div><div class="text-[10px] text-stone-600 font-normal">Kandidat Tunggal Terverifikasi Sistem Pusat</div></div>
+          </div>
+          <span class="w-6 h-6 rounded-full border-2 border-stone-900 flex items-center justify-center text-xs ${isSelected ? "bg-stone-900 text-amber-300" : "bg-transparent"}">${isSelected ? "✓" : ""}</span>
+        `;
+        optionsContainer.appendChild(banyuBtn);
+
+        const decoyBtn = document.createElement("button"); decoyBtn.type = "button";
+        decoyBtn.onclick = () => { window.playSound("error"); triggerScreenShake(); document.getElementById("q5JokeToast").classList.remove("hidden"); };
+        decoyBtn.className = "w-full text-center py-2 px-3 rounded-lg border border-dashed border-stone-400 text-stone-500 hover:text-stone-700 font-mono-receipt text-[11px] transition mt-1";
+        decoyBtn.textContent = "🔍 Kok pilihannya cuma satu? Cari nama lain...";
+        optionsContainer.appendChild(decoyBtn);
+      } else {
+        q.options.forEach((candidateName, idx) => {
+          const isSelected = selectedOptIndex === idx;
+          const btn = document.createElement("button"); btn.type = "button";
+          btn.onclick = () => window.selectOption(q.id, idx);
+          btn.className = `w-full text-left p-3 sm:p-3.5 rounded-xl border-2 font-mono-receipt text-xs sm:text-sm transition-all flex items-center justify-between ${isSelected ? "bg-stone-900 border-stone-900 text-amber-300 font-bold shadow-sm" : "bg-[#FAF6EE] hover:bg-amber-50/80 border-stone-800 text-stone-900 font-medium"}`;
+          btn.innerHTML = `<span class="pr-2">${candidateName}</span><span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[11px] shrink-0 ${isSelected ? "border-amber-300 bg-amber-300 text-stone-950 font-extrabold" : "border-stone-500"}">${isSelected ? "✓" : ""}</span>`;
+          optionsContainer.appendChild(btn);
+        });
+      }
+
+      document.getElementById("prevQuestionBtn").disabled = currentQuestionIndex === 0;
+      const nextBtn = document.getElementById("nextQuestionBtn");
+      if (userAnswers[q.id] !== undefined) {
+        nextBtn.disabled = false;
+        nextBtn.className = "flex-1 py-3 px-4 rounded-xl font-bold uppercase tracking-wider transition bg-stone-900 hover:bg-stone-800 text-amber-300 border-2 border-stone-900 cursor-pointer shadow";
+        nextBtn.innerHTML = currentQuestionIndex === totalQ - 1 ? "Kirim Vote & Lihat Hasil 🏆" : "Lanjut Soal Berikutnya &rarr;";
+      } else {
+        nextBtn.disabled = true;
+        nextBtn.className = "flex-1 py-3 px-4 rounded-xl font-bold uppercase tracking-wider transition bg-stone-300 text-stone-500 border-2 border-stone-300 cursor-not-allowed";
+        nextBtn.innerHTML = "Pilih Salah Satu Nama";
+      }
+    }
+
+    window.selectOption = function(qId, idx) {
+      userAnswers[qId] = idx; window.playSound("click"); renderCurrentQuestion();
+    };
+
+    window.prevQuestion = function() {
+      if (currentQuestionIndex > 0) { currentQuestionIndex--; window.playSound("click"); renderCurrentQuestion(); }
+    };
+
+    window.nextQuestion = function() {
+      if (userAnswers[QUESTIONS[currentQuestionIndex].id] === undefined) return;
+      if (currentQuestionIndex < QUESTIONS.length - 1) {
+        currentQuestionIndex++; window.playSound("click"); renderCurrentQuestion();
+      } else {
+        submitAllVotes();
+      }
+    };
+
+    // Firebase Data Logic
+    let liveUnsubscribe = null;
+
+    async function submitAllVotes() {
+      window.playSound("fanfare");
+      window.switchSlide(3);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      const loadingBox = document.getElementById("resultsLoadingBox");
+      loadingBox.classList.remove("hidden");
+      document.getElementById("resultsListContainer").innerHTML = "";
+
+      if (user && db) {
+        const votesRef = collection(db, 'artifacts', appId, 'public', 'data', 'polls');
+        try {
+          await addDoc(votesRef, { userId: user.uid, timestamp: Date.now(), votes: userAnswers });
+        } catch (e) { console.error("Error saving vote:", e); }
+      }
+
+      loadingBox.classList.add("hidden");
+      subscribeToLiveResults();
+    }
+
+    function subscribeToLiveResults() {
+      if (!user || !db) { window.renderResults(getEmptyTally()); return; }
+      
+      const votesRef = collection(db, 'artifacts', appId, 'public', 'data', 'polls');
+      if (liveUnsubscribe) liveUnsubscribe();
+      
+      liveUnsubscribe = onSnapshot(votesRef, (snapshot) => {
+        let tally = getEmptyTally();
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data && data.votes) {
+            for (let qId in data.votes) {
+              let optIdx = data.votes[qId];
+              if (tally[qId] && tally[qId][optIdx] !== undefined) tally[qId][optIdx]++;
+            }
+          }
+        });
+        window.renderResults(tally);
+        window.fireCelebrationConfetti(); 
+      }, (error) => { console.error("Snapshot error:", error); });
+    }
+
+    window.openResultsDirectly = function() {
+      window.playSound("click"); window.switchSlide(3); subscribeToLiveResults();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.refreshLiveResults = function() {
+      window.playSound("click");
+      const btn = document.getElementById("refreshResultsBtn");
+      btn.innerHTML = "🔄 Live Sync Aktif";
+      setTimeout(() => { btn.innerHTML = "🔄 Refresh Suara"; }, 2000);
+      // Data is already live due to onSnapshot, no extra fetch needed.
+    };
+
+    window.renderResults = function(tally) {
+      const container = document.getElementById("resultsListContainer");
+      container.innerHTML = "";
+
+      let maxTotalVotes = 0;
+      QUESTIONS.forEach(q => { const sum = (tally[q.id] || []).reduce((a, b) => a + b, 0); if (sum > maxTotalVotes) maxTotalVotes = sum; });
+      document.getElementById("totalVotersBadge").innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Total Suara Masuk: <strong>${maxTotalVotes} Vote</strong>`;
+
+      QUESTIONS.forEach((q, qIndex) => {
+        const counts = tally[q.id] || new Array(q.options.length).fill(0);
+        const totalVotesForQ = counts.reduce((a, b) => a + b, 0);
+
+        const ranked = q.options.map((name, idx) => {
+          const votes = counts[idx] || 0;
+          const pct = totalVotesForQ > 0 ? Math.round((votes / totalVotesForQ) * 100) : (q.isBanyuSpecial ? 100 : 0);
+          return { name, votes, pct, idx };
+        });
+        ranked.sort((a, b) => b.votes - a.votes);
+        const topVoteCount = ranked[0].votes;
+        const winners = ranked.filter(r => r.votes === topVoteCount && topVoteCount > 0);
+
+        const card = document.createElement("div");
+        card.className = `rounded-xl border-2 p-4 transition-all ${q.isBanyuSpecial ? "bg-amber-50 border-amber-700 shadow-md" : "bg-[#FAF6EE] border-stone-800 shadow-sm"}`;
+
+        let winnerBannerHTML = "";
+        if (q.isBanyuSpecial) {
+          winnerBannerHTML = `<div class="mt-2 mb-3 p-2.5 rounded-lg bg-amber-300/80 border border-amber-800 flex items-center justify-between"><div class="font-mono-receipt text-xs font-extrabold text-stone-950">👑 PEMENANG MUTLAK: Banyu Linuwih</div><span class="font-mono-receipt text-[11px] font-extrabold bg-stone-900 text-amber-300 px-2 py-0.5 rounded">100% SUARA SAH</span></div>`;
+        } else if (totalVotesForQ === 0) {
+          winnerBannerHTML = `<div class="mt-2 mb-3 p-2 rounded-lg bg-stone-200 font-mono-receipt text-[11px] text-stone-600">Belum ada suara masuk di kategori ini.</div>`;
+        } else {
+          winnerBannerHTML = `<div class="mt-2 mb-3 p-2.5 rounded-lg bg-emerald-900 text-amber-50 flex items-center justify-between gap-2"><div class="font-mono-receipt text-xs font-bold leading-snug">🏆 Pemenang: <span class="text-amber-300 font-extrabold">${winners.map(w => w.name).join(" & ")}</span></div><span class="font-mono-receipt text-[11px] font-bold bg-amber-400 text-stone-950 px-2 py-0.5 rounded shrink-0">${winners[0].pct}% (${winners[0].votes} Vote)</span></div>`;
+        }
+
+        let breakdownHTML = "";
+        ranked.forEach((item, rankIdx) => {
+          const isTop = item.votes === topVoteCount && topVoteCount > 0;
+          const displayVotes = q.isBanyuSpecial && item.votes === 0 ? 1 : item.votes;
+          const displayPct = q.isBanyuSpecial ? 100 : item.pct;
+          breakdownHTML += `
+            <div class="space-y-1">
+              <div class="flex items-center justify-between font-mono-receipt text-[11.5px]">
+                <span class="${isTop || q.isBanyuSpecial ? "font-extrabold text-stone-950" : "text-stone-600"} truncate pr-2">${rankIdx + 1}. ${item.name}</span>
+                <span class="shrink-0 font-bold ${isTop || q.isBanyuSpecial ? "text-stone-950" : "text-stone-500"}">${displayVotes} suara (${displayPct}%)</span>
+              </div>
+              <div class="w-full h-2 bg-stone-200 rounded-full overflow-hidden border border-stone-300">
+                <div class="h-full transition-all duration-700 ${q.isBanyuSpecial ? "bg-amber-600" : isTop ? "bg-stone-900" : "bg-stone-400"}" style="width: ${displayPct}%"></div>
+              </div>
+            </div>`;
+        });
+
+        card.innerHTML = `<div class="flex items-center justify-between font-mono-receipt text-[10px] font-bold text-stone-500 uppercase tracking-wider"><span>KATEGORI 0${qIndex + 1}</span><span>TOTAL: ${q.isBanyuSpecial && totalVotesForQ === 0 ? 1 : totalVotesForQ} SUARA</span></div><h4 class="font-serif-warm text-base sm:text-lg font-bold text-stone-900 mt-0.5">${q.question}</h4>${winnerBannerHTML}<div class="space-y-2.5 pt-1 border-t border-dashed border-stone-300">${breakdownHTML}</div>`;
+        container.appendChild(card);
+      });
+    };
+
+    window.triggerFinalStamp = function() {
+      if (hasStampedFinal) return;
+      hasStampedFinal = true; window.playSound("stamp"); triggerScreenShake();
+      document.getElementById("finalStampContainer").innerHTML = `<div class="rubber-stamp rubber-stamp-green text-xs sm:text-sm">SAH SARJANA S.Pi.</div>`;
+      window.fireCelebrationConfetti();
+    };
+
+    window.fireCelebrationConfetti = function() {
+      if (typeof confetti === "function") confetti({ particleCount: 75, spread: 70, origin: { y: 0.6 }, colors: ["#D97706", "#059669", "#DC2626", "#F59E0B", "#1C1917"] });
+    };
+
+    window.celebrateAgain = function() { window.playSound("fanfare"); window.fireCelebrationConfetti(); };
+
+    window.retakeVote = function() {
+      window.playSound("click"); userAnswers = {}; currentQuestionIndex = 0;
+      window.switchSlide(2); renderCurrentQuestion(); window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.switchSlide = function(slideNumber) {
+      [1, 2, 3].forEach(num => {
+        const sec = document.getElementById(`slide${num}`); const nav = document.getElementById(`navStep${num}`);
+        if (num === slideNumber) { sec.classList.remove("hidden"); nav.className = "flex-1 py-1.5 px-2 rounded-md font-bold transition text-center bg-stone-900 text-amber-50 shadow-sm"; } 
+        else { sec.classList.add("hidden"); nav.className = "flex-1 py-1.5 px-2 rounded-md font-medium transition text-center text-stone-500 hover:text-stone-800"; }
+      });
+    };
+
+    window.trySwitchSlide = function(targetSlide) {
+      if (targetSlide === 1) { window.playSound("click"); window.switchSlide(1); } 
+      else if (targetSlide === 2) {
+        if (checkedBurdens.size < BURDENS.length) { window.playSound("error"); triggerScreenShake(); return; }
+        window.playSound("click"); window.switchSlide(2); renderCurrentQuestion();
+      } else if (targetSlide === 3) { window.openResultsDirectly(); }
+    };
+
+    // Inisialisasi awal
+    window.addEventListener("DOMContentLoaded", () => { renderBurdens(); });
+  </script>
+</body>
+</html>
